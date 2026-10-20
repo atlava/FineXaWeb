@@ -3,13 +3,11 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 
 export default function LoginAdmin() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,126 +15,89 @@ export default function LoginAdmin() {
   };
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-white">
-      {/* Bagian Kiri: Visual Dark Teal khas FineXa (Sesuai Figma) */}
-      <div className="md:w-1/2 bg-gradient-to-br from-[#1B5245] to-[#0E352B] text-white flex flex-col justify-center px-8 py-12 md:p-16 relative overflow-hidden">
-        <div className="relative z-10 max-w-lg mx-auto md:mx-0">
-          {/* Logo & Brand FineXa */}
-          <div className="flex items-center gap-3 mb-12">
-            <div className="w-12 h-12 bg-emerald-500/20 rounded-2xl flex items-center justify-center border border-emerald-400/30">
-              <span className="text-emerald-400 text-2xl font-black">↗</span>
+    <div className="flex flex-col md:flex-row min-h-screen bg-gray-50">
+      {/* Visual Kiri */}
+      <div className="md:w-1/2 relative overflow-hidden bg-gradient-to-b from-[#51BA55] to-[#3A8E3F] text-white flex flex-col justify-center px-8 py-12 md:p-16 rounded-b-[30px] md:rounded-none z-0">
+        <div className="absolute -top-10 -right-20 w-80 h-80 md:w-[450px] md:h-[450px] bg-white opacity-10 rounded-full pointer-events-none" />
+        <div className="absolute bottom-10 left-10 w-40 h-40 md:w-56 md:h-56 bg-white opacity-10 rounded-full pointer-events-none" />
+        <div className="relative z-10 flex flex-col h-full justify-center">
+          <div className="flex items-center gap-3 mb-10">
+            <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-xl flex items-center justify-center font-bold text-xl">
+              FX
             </div>
-            <span className="text-3xl font-bold tracking-tight text-white">FineXa</span>
+            <span className="text-3xl font-bold tracking-wide">FineXa</span>
           </div>
-
-          {/* Judul Utama */}
-          <h1 className="text-3xl md:text-4xl font-extrabold leading-tight mb-4">
+          <h1 className="text-4xl md:text-[42px] font-bold leading-[1.2] mb-5">
             Platform Investasi<br />Terpercaya untuk<br />Masa Depan
           </h1>
-
-          {/* Sub-judul */}
-          <p className="text-sm md:text-base text-gray-300 mb-12 font-normal leading-relaxed">
+          <p className="text-sm md:text-base text-white/80 mb-14 max-w-md font-light leading-relaxed">
             Rekomendasi investasi yang dipersonalisasi berdasarkan profil risiko dan tujuan finansial Anda.
           </p>
-
-          {/* Statistik 3 Kolom */}
-          <div className="flex gap-8 md:gap-12 border-t border-white/10 pt-8">
-            <div>
-              <p className="text-2xl md:text-3xl font-extrabold text-white">5,000+</p>
-              <p className="text-xs text-gray-300 font-medium mt-1">Active Users</p>
+          <div className="flex gap-6 md:gap-10">
+            <div className="flex flex-col">
+              <span className="text-2xl md:text-[28px] font-bold mb-1">5,000+</span>
+              <span className="text-xs md:text-sm text-white/80 font-light">Active Users</span>
             </div>
-            <div>
-              <p className="text-2xl md:text-3xl font-extrabold text-white">98%</p>
-              <p className="text-xs text-gray-300 font-medium mt-1">Satisfaction</p>
+            <div className="flex flex-col">
+              <span className="text-2xl md:text-[28px] font-bold mb-1">98%</span>
+              <span className="text-xs md:text-sm text-white/80 font-light">Satisfaction</span>
             </div>
-            <div>
-              <p className="text-2xl md:text-3xl font-extrabold text-white">₹150B+</p>
-              <p className="text-xs text-gray-300 font-medium mt-1">
+            <div className="flex flex-col">
+              <span className="text-2xl md:text-[28px] font-bold mb-1">Rp 150B+</span>
+              <span className="text-xs md:text-sm text-white/80 font-light leading-tight">
                 Assets Under<br />Management
-              </p>
+              </span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Bagian Kanan: Form Login */}
-      <div className="w-full md:w-1/2 flex items-center justify-center p-6 md:p-16 bg-white">
-        <div className="w-full max-w-md space-y-6">
-          <div>
-            <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tight">
-              Selamat Datang Kembali
-            </h2>
-            <p className="text-xs md:text-sm text-gray-500 mt-1">
-              Masuk ke akun FineXa Anda untuk melanjutkan
-            </p>
-          </div>
-
-          <form onSubmit={handleLogin} className="space-y-4">
-            {/* Input Email dengan Ikon */}
-            <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                Alamat Email
-              </label>
-              <div className="relative">
-                <Mail className="w-4 h-4 text-gray-400 absolute left-3.5 top-3.5" />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="nama@email.com"
-                  className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs md:text-sm text-gray-900 focus:outline-none focus:border-[#1B5245] focus:bg-white transition-all"
-                  required
-                />
-              </div>
+      {/* Form Kanan */}
+      <div className="w-full md:w-1/2 flex items-start md:items-center justify-center p-6 md:p-16 -mt-10 md:mt-0 z-10">
+        <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md">
+          <h2 className="text-3xl font-bold text-gray-800 mb-2">Selamat Datang Kembali</h2>
+          <p className="text-sm text-gray-500 mb-6">Masuk ke akun FineXa Anda untuk melanjutkan</p>
+          <form onSubmit={handleLogin} className="flex flex-col gap-4">
+            <div className="flex flex-col">
+              <label className="text-sm font-medium text-gray-700 mb-1">Alamat Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="admin@gmail.com"
+                className="border border-gray-300 rounded-lg p-3 focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition-all text-sm"
+                required
+              />
             </div>
-
-            {/* Input Password dengan Ikon Lock & Toggle Eye */}
-            <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                Password
-              </label>
-              <div className="relative">
-                <Lock className="w-4 h-4 text-gray-400 absolute left-3.5 top-3.5" />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Masukkan password"
-                  className="w-full pl-10 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs md:text-sm text-gray-900 focus:outline-none focus:border-[#1B5245] focus:bg-white transition-all"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-3.5 text-gray-400 hover:text-gray-600"
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
+            <div className="flex flex-col">
+              <label className="text-sm font-medium text-gray-700 mb-1">Password</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Masukkan password"
+                className="border border-gray-300 rounded-lg p-3 focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition-all text-sm"
+                required
+              />
             </div>
-
-            {/* Link Lupa Password */}
-            <div className="flex justify-end">
-              <Link href="#" className="text-xs font-semibold text-emerald-600 hover:underline">
+            <div className="flex items-center justify-between text-sm mt-1">
+              <label className="flex items-center gap-2 text-gray-600 cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 border-gray-300 rounded accent-emerald-600 cursor-pointer"
+                />
+                Ingat Saya
+              </label>
+              <Link href="#" className="font-medium text-emerald-600 hover:underline">
                 Lupa password?
               </Link>
             </div>
-
-            {/* Tombol Masuk */}
             <button
               type="submit"
               className="w-full bg-[#0F3D32] hover:bg-[#0B2E26] text-white font-bold py-3 rounded-xl text-xs md:text-sm shadow-md hover:shadow-lg transition-all duration-200"
             >
               Masuk ke Dashboard
             </button>
-
-            {/* Link Daftar */}
-            <p className="text-center text-xs text-gray-500 pt-2">
-              Belum punya akun?{' '}
-              <Link href="#" className="font-bold text-emerald-600 hover:underline">
-                Daftar sekarang
-              </Link>
-            </p>
           </form>
         </div>
       </div>

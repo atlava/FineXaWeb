@@ -132,11 +132,14 @@ export default function FaqManagementAdmin() {
                 </button>
               </div>
 
-              {openFaqId === faq.id && (
-                <div className="mt-3 pt-3 border-t border-gray-100 text-sm text-gray-600 leading-relaxed">
+                <div className={`grid transition-all duration-300 ease-in-out ${
+                        openFaqId === faq.id ? 'grid-rows-[1fr] opacity-100 mt-3 pt-3 border-t border-gray-100' : 'grid-rows-[0fr] opacity-0'
+                      } overflow-hidden`}
+                  >
+                <div className="overflow-hidden text-sm text-gray-600 leading-relaxed">
                   {faq.answer}
                 </div>
-              )}
+              </div>
             </div>
           ))}
         </div>

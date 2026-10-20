@@ -55,7 +55,7 @@ export default function UserManagementAdmin() {
             placeholder="Cari nama atau email..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 md:pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-xs md:text-sm focus:outline-none focus:border-emerald-600 focus:bg-white transition-all"
+            className="w-full pl-10 md:pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-xs md:text-sm text-gray-900 font-medium focus:outline-none focus:border-emerald-600 focus:bg-white transition-all"
           />
         </div>
       </div>
