@@ -67,64 +67,64 @@ const recentUsers = [
 export default function DashboardAdmin() {
   return (
     <div className="space-y-6">
-      {/* Header Judul Halaman */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Dashboard</h1>
-        <p className="text-xs md:text-sm text-gray-400 mt-1">
-          Overview sistem dan aktivitas pengguna FineXa
-        </p>
-      </div>
-
-      {/* Grid 3 Kartu Metrik Utama */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        {/* Card 1: Total Users */}
-        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-              <Users className="w-5 h-5" />
-            </div>
-            <div className="flex items-center gap-1 text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full text-xs font-semibold">
-              <TrendingUp className="w-3.5 h-3.5" />
-              <span>+12.5%</span>
-            </div>
-          </div>
-          <div className="mt-4">
-            <span className="text-xs text-gray-400 font-medium">Total Users</span>
-            <h3 className="text-2xl font-extrabold text-gray-900 mt-0.5">5,247</h3>
-          </div>
+            {/* Bagian sticky: Judul + 3 Kartu Metrik */}
+      <div className="lg:sticky lg:top-0 lg:z-20 space-y-6 bg-gray-50 pb-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-950 tracking-tight">Dashboard</h1>
+          <p className="text-sm text-gray-500 mt-1">Overview sistem dan aktivitas pengguna FineXa</p>
         </div>
 
-        {/* Card 2: Active Sessions / Month */}
-        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
-              <Activity className="w-5 h-5" />
+        {/* Grid 3 Kartu Metrik Utama */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          {/* Card 1: Total Users */}
+          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-between">
+            <div className="flex items-center justify-between">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                <Users className="w-5 h-5" />
+              </div>
+              <div className="flex items-center gap-1 text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full text-xs font-semibold">
+                <TrendingUp className="w-3.5 h-3.5" />
+                <span>+12.5%</span>
+              </div>
             </div>
-            <div className="flex items-center gap-1 text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full text-xs font-semibold">
-              <TrendingUp className="w-3.5 h-3.5" />
-              <span>+8.2%</span>
+            <div className="mt-4">
+              <span className="text-xs text-gray-400 font-medium">Total Users</span>
+              <h3 className="text-2xl font-extrabold text-gray-900 mt-0.5">5,247</h3>
             </div>
           </div>
-          <div className="mt-4">
-            <span className="text-xs text-gray-400 font-medium">Active Sessions / Month</span>
-            <h3 className="text-2xl font-extrabold text-gray-900 mt-0.5">892</h3>
-          </div>
-        </div>
 
-        {/* Card 3: Content Items */}
-        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
-              <FileText className="w-5 h-5" />
+          {/* Card 2: Active Sessions / Month */}
+          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-between">
+            <div className="flex items-center justify-between">
+              <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                <Activity className="w-5 h-5" />
+              </div>
+              <div className="flex items-center gap-1 text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full text-xs font-semibold">
+                <TrendingUp className="w-3.5 h-3.5" />
+                <span>+8.2%</span>
+              </div>
             </div>
-            <div className="flex items-center gap-1 text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full text-xs font-semibold">
-              <TrendingUp className="w-3.5 h-3.5" />
-              <span>+24</span>
+            <div className="mt-4">
+              <span className="text-xs text-gray-400 font-medium">Active Sessions / Month</span>
+              <h3 className="text-2xl font-extrabold text-gray-900 mt-0.5">892</h3>
             </div>
           </div>
-          <div className="mt-4">
-            <span className="text-xs text-gray-400 font-medium">Content Items</span>
-            <h3 className="text-2xl font-extrabold text-gray-900 mt-0.5">9,700</h3>
+
+          {/* Card 3: Content Items */}
+          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-between">
+            <div className="flex items-center justify-between">
+              <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                <FileText className="w-5 h-5" />
+              </div>
+              <div className="flex items-center gap-1 text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full text-xs font-semibold">
+                <TrendingUp className="w-3.5 h-3.5" />
+                <span>+24</span>
+              </div>
+            </div>
+            <div className="mt-4">
+              <span className="text-xs text-gray-400 font-medium">Content Items</span>
+              <h3 className="text-2xl font-extrabold text-gray-900 mt-0.5">9,700</h3>
+            </div>
           </div>
         </div>
       </div>

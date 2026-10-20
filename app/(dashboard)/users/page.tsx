@@ -8,7 +8,6 @@ interface UserData {
   name: string;
   email: string;
   role: string;
-  portfolio: string;
   joinDate: string;
   lastActive: string;
   roleColor: string;
@@ -16,11 +15,11 @@ interface UserData {
 
 export default function UserManagementAdmin() {
   const [users, setUsers] = useState<UserData[]>([
-    { id: 1, name: 'Budi Santoso', email: 'budi@email.com', role: 'Moderat', portfolio: 'Rp 150.000.000', joinDate: '10 Jan 2025', lastActive: '8 Apr 2026', roleColor: 'bg-emerald-50 text-emerald-600' },
-    { id: 2, name: 'Siti Aminah', email: 'siti@email.com', role: 'Konservatif', portfolio: 'Rp 85.000.000', joinDate: '15 Feb 2025', lastActive: '7 Apr 2026', roleColor: 'bg-blue-50 text-blue-600' },
-    { id: 3, name: 'Ahmad Rizki', email: 'ahmad@email.com', role: 'Agresif', portfolio: 'Rp 200.000.000', joinDate: '20 Nov 2024', lastActive: '15 Mar 2026', roleColor: 'bg-amber-50 text-amber-600' },
-    { id: 4, name: 'Dewi Lestari', email: 'dewi@email.com', role: 'Moderat', portfolio: 'Rp 120.000.000', joinDate: '5 Mar 2025', lastActive: '6 Apr 2026', roleColor: 'bg-emerald-50 text-emerald-600' },
-    { id: 5, name: 'Linda Wijaya', email: 'linda@email.com', role: 'Konservatif', portfolio: 'Rp 95.000.000', joinDate: '1 Apr 2025', lastActive: '8 Apr 2026', roleColor: 'bg-blue-50 text-blue-600' },
+    { id: 1, name: 'Budi Santoso', email: 'budi@email.com', role: 'Moderat', joinDate: '10 Jan 2025', lastActive: '8 Apr 2026', roleColor: 'bg-emerald-50 text-emerald-600' },
+    { id: 2, name: 'Siti Aminah', email: 'siti@email.com', role: 'Konservatif', joinDate: '15 Feb 2025', lastActive: '7 Apr 2026', roleColor: 'bg-blue-50 text-blue-600' },
+    { id: 3, name: 'Ahmad Rizki', email: 'ahmad@email.com', role: 'Agresif', joinDate: '20 Nov 2024', lastActive: '15 Mar 2026', roleColor: 'bg-amber-50 text-amber-600' },
+    { id: 4, name: 'Dewi Lestari', email: 'dewi@email.com', role: 'Moderat', joinDate: '5 Mar 2025', lastActive: '6 Apr 2026', roleColor: 'bg-emerald-50 text-emerald-600' },
+    { id: 5, name: 'Linda Wijaya', email: 'linda@email.com', role: 'Konservatif', joinDate: '1 Apr 2025', lastActive: '8 Apr 2026', roleColor: 'bg-blue-50 text-blue-600' },
   ]);
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -67,7 +66,6 @@ export default function UserManagementAdmin() {
               <tr>
                 <th className="px-4 md:px-6 py-3 md:py-4.5 whitespace-nowrap">User</th>
                 <th className="px-4 md:px-6 py-3 md:py-4.5 whitespace-nowrap">Profil Risiko</th>
-                <th className="px-4 md:px-6 py-3 md:py-4.5 whitespace-nowrap">Portfolio</th>
                 <th className="px-4 md:px-6 py-3 md:py-4.5 whitespace-nowrap">Join Date</th>
                 <th className="px-4 md:px-6 py-3 md:py-4.5 whitespace-nowrap">Last Active</th>
                 <th className="px-4 md:px-6 py-3 md:py-4.5 text-center whitespace-nowrap">Actions</th>
@@ -88,9 +86,6 @@ export default function UserManagementAdmin() {
                       <span className={`px-2 md:px-2.5 py-1 rounded-full text-[10px] md:text-xs font-bold ${user.roleColor}`}>
                         {user.role}
                       </span>
-                    </td>
-                    <td className="px-4 md:px-6 py-3 md:py-4.5 font-semibold text-gray-900 text-xs md:text-sm whitespace-nowrap">
-                      {user.portfolio}
                     </td>
                     <td className="px-4 md:px-6 py-3 md:py-4.5 text-gray-500 text-[10px] md:text-xs whitespace-nowrap">
                       {user.joinDate}
@@ -155,10 +150,6 @@ export default function UserManagementAdmin() {
               <div className="flex items-center gap-3 p-3 md:p-3.5 bg-gray-50 rounded-xl md:rounded-2xl border border-gray-100">
                 <Mail className="w-3.5 h-3.5 md:w-4 md:h-4 text-gray-400 flex-shrink-0" />
                 <span className="text-[11px] md:text-xs text-gray-700 font-medium truncate">{selectedUser.email}</span>
-              </div>
-              <div className="flex items-center gap-3 p-3 md:p-3.5 bg-gray-50 rounded-xl md:rounded-2xl border border-gray-100">
-                <Wallet className="w-3.5 h-3.5 md:w-4 md:h-4 text-gray-400 flex-shrink-0" />
-                <span className="text-[11px] md:text-xs text-gray-700 font-semibold truncate">{selectedUser.portfolio}</span>
               </div>
               <div className="flex items-center gap-3 p-3 md:p-3.5 bg-gray-50 rounded-xl md:rounded-2xl border border-gray-100">
                 <Calendar className="w-3.5 h-3.5 md:w-4 md:h-4 text-gray-400 flex-shrink-0" />

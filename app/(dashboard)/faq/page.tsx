@@ -35,7 +35,13 @@ export default function FaqManagementAdmin() {
   const unpublishedCount = faqs.filter((f) => f.status === 'unpublished').length;
 
   const toggleFaq = (id: number) => {
-    setOpenFaqId(openFaqId === id ? null : id);
+    setFaqs ((prev) =>
+    prev.map((f)=>
+    f.id === id
+  ?{...f, status: f.status === 'published' ? 'unpublished' : 'published'}
+    : f
+  )
+)
   };
 
   const handleConfirmDelete = () => {
@@ -124,14 +130,24 @@ export default function FaqManagementAdmin() {
                     )}
                   </h4>
                 </div>
+               <div className="flex items-center gap-2">
                 <button
+                onClick={() => toggleFaq(faq.id)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${
+                  faq.status === 'published'
+                  ? 'bg-amber-50 text-amber-600 hover:bg-amber-100': 'bg-emerald-600 text-white hover:bg-emerald-700'
+                }`}
+                >
+                  {faq.status === 'published' ? 'Unpublish' : 'Publish'}
+                  </button>
+                  <button
                   onClick={() => setDeleteFaqTarget(faq)}
                   className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    </button>
+                    </div>
+                    </div>
                 <div className={`grid transition-all duration-300 ease-in-out ${
                         openFaqId === faq.id ? 'grid-rows-[1fr] opacity-100 mt-3 pt-3 border-t border-gray-100' : 'grid-rows-[0fr] opacity-0'
                       } overflow-hidden`}

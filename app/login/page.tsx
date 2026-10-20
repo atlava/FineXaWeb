@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import Image from "next/image";
 
 export default function LoginAdmin() {
   const router = useRouter();
@@ -15,25 +16,35 @@ export default function LoginAdmin() {
   };
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-gray-50">
+    <div className="flex flex-col md:flex-row min-h-screen bg-white">
       {/* Visual Kiri */}
-      <div className="md:w-1/2 relative overflow-hidden bg-gradient-to-b from-[#51BA55] to-[#3A8E3F] text-white flex flex-col justify-center px-8 py-12 md:p-16 rounded-b-[30px] md:rounded-none z-0">
-        <div className="absolute -top-10 -right-20 w-80 h-80 md:w-[450px] md:h-[450px] bg-white opacity-10 rounded-full pointer-events-none" />
-        <div className="absolute bottom-10 left-10 w-40 h-40 md:w-56 md:h-56 bg-white opacity-10 rounded-full pointer-events-none" />
-        <div className="relative z-10 flex flex-col h-full justify-center">
-          <div className="flex items-center gap-3 mb-10">
-            <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-xl flex items-center justify-center font-bold text-xl">
-              FX
-            </div>
-            <span className="text-3xl font-bold tracking-wide">FineXa</span>
-          </div>
-          <h1 className="text-4xl md:text-[42px] font-bold leading-[1.2] mb-5">
-            Platform Investasi<br />Terpercaya untuk<br />Masa Depan
-          </h1>
-          <p className="text-sm md:text-base text-white/80 mb-14 max-w-md font-light leading-relaxed">
-            Rekomendasi investasi yang dipersonalisasi berdasarkan profil risiko dan tujuan finansial Anda.
-          </p>
-          <div className="flex gap-6 md:gap-10">
+      <div className="md:w-1/2 relative overflow-hidden bg-gradient-to-br from-[#1f8a74] via-[#0f5c4b] to-[#0C4137] text-white flex flex-col justify-center px-8 py-12 md:p-16 rounded-b-[30px] md:rounded-none z-0">
+      <div className="absolute -top-10 -right-20 w-80 h-80 md:w-[450px] md:h-[450px] bg-white opacity-10 rounded-full pointer-events-none" />
+      <div className="absolute bottom-10 left-10 w-40 h-40 md:w-56 md:h-56 bg-white opacity-10 rounded-full pointer-events-none" />
+      
+      <div className="relative z-10 flex flex-col h-full justify-center">
+      {/* Logo */}
+       <div className="flex items-center gap-2 mb-10">
+          <Image
+               src="/images/logo_finexa.png"
+                alt="Logo FineXa"
+                width={180}
+                height={180}
+                className="w-28 h-28 md:w-40 md:h-40"
+             />
+          <span className="text-5xl md:text-6xl font-bold">FineXa</span>
+       </div>
+
+       <h1 className="text-3xl md:text-4xl font-bold leading-[1.25] mb-5 max-w-md">
+          Platform Investasi<br />Terpercaya untuk<br />Masa Depan
+      </h1>
+      <p className="text-sm text-white/80 mb-12 max-w-md font-light leading-relaxed">
+          Rekomendasi investasi yang dipersonalisasi berdasarkan profil risiko dan tujuan finansial Anda.
+      </p>
+
+      {/* Statistik */}
+       <div className="grid grid-cols-3 gap-4 max-w-md text-center">
+         <div className="flex gap-6 md:gap-10">
             <div className="flex flex-col">
               <span className="text-2xl md:text-[28px] font-bold mb-1">5,000+</span>
               <span className="text-xs md:text-sm text-white/80 font-light">Active Users</span>
@@ -43,14 +54,15 @@ export default function LoginAdmin() {
               <span className="text-xs md:text-sm text-white/80 font-light">Satisfaction</span>
             </div>
             <div className="flex flex-col">
-              <span className="text-2xl md:text-[28px] font-bold mb-1">Rp 150B+</span>
+              <span className="text-2xl md:text-[28px] font-bold mb-1 whitespace-nowrap">Rp 150B+</span>
               <span className="text-xs md:text-sm text-white/80 font-light leading-tight">
                 Assets Under<br />Management
               </span>
-            </div>
-          </div>
+           </div>   
         </div>
       </div>
+    </div>
+    </div>
 
       {/* Form Kanan */}
       <div className="w-full md:w-1/2 flex items-start md:items-center justify-center p-6 md:p-16 -mt-10 md:mt-0 z-10">

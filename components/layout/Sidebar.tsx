@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from "next/image";
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
@@ -44,34 +45,32 @@ export default function Sidebar({
 
       {/* SIDEBAR STICKY */}
       <aside
-        className={`fixed md:sticky top-0 inset-y-0 left-0 z-50 h-screen w-64 bg-white border-r border-gray-100 flex flex-col justify-between transform transition-transform duration-300 ease-in-out ${
+        className={`fixed md:sticky top-0 inset-y-0 left-0 z-50 h-screen w-64 bg-white border-r border-brand flex flex-col justify-between transform transition-transform duration-300 ease-in-out ${
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         }`}
       >
         <div>
           {/* Logo Brand & Badge Admin */}
-          <div className="p-6 border-b border-gray-100 flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
-                ↗
-              </div>
-              <span className="text-xl font-bold text-gray-900 tracking-tight">FineXa</span>
-            </Link>
-            <button
-              onClick={() => setIsSidebarOpen(false)}
-              className="md:hidden text-gray-400 hover:text-gray-600"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-          <div className="px-6 pt-3">
+          <div className="flex items-center gap-0 px-7 py-7">
+            <Image
+            src="/images/logo_finexa.png"
+            alt="Logo FineXa"
+            width={50}
+            height={50}
+            className="rounded-xl"
+            />
+            <span className="text-xl font-bold" style={{ color: "#0C4137" }}>
+              FineXa
+              </span>
+            </div>
+          <div className="px-7 py-0">
             <span className="bg-amber-100/70 text-amber-700 text-[10px] font-semibold px-2.5 py-0.5 rounded-full">
               Admin Panel
             </span>
           </div>
 
           {/* Navigasi Menu */}
-          <nav className="p-4 space-y-1.5 mt-2">
+          <nav className="p-4 space-y-1.5 mt-5">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive =
@@ -86,11 +85,11 @@ export default function Sidebar({
                   onClick={() => setIsSidebarOpen(false)}
                   className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
                     isActive
-                      ? 'bg-emerald-50 text-emerald-600 shadow-sm'
+                      ? 'bg-F0FDF4 text-brand shadow-sm'
                       : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
                   }`}
                 >
-                  <Icon className={`w-5 h-5 ${isActive ? 'text-emerald-600' : 'text-gray-400'}`} />
+                  <Icon className={`w-5 h-5 ${isActive ? 'text-brand' : 'text-brand'}`} />
                   {item.name}
                 </Link>
               );

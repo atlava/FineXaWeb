@@ -7,17 +7,21 @@ interface HeaderProps {
   onOpenSidebar: () => void;
 }
 
+<header className="sticky top-0 z-30 flex h-20 items-center justify-between border-b border-gray-100 bg-white px-10">
+  ...
+</header>
+
 export default function Header({ onOpenSidebar }: HeaderProps) {
   return (
     <header className="h-16 bg-white border-b border-gray-100 px-4 md:px-8 flex items-center justify-between sticky top-0 z-30">
       <div className="flex items-center gap-3">
         <button
           onClick={onOpenSidebar}
-          className="md:hidden p-2 text-gray-500 hover:bg-gray-50 rounded-lg"
+          className="md:hidden p-2 text-gray-500 hover:bg-brand rounded-lg"
         >
           <Menu className="w-5 h-5" />
         </button>
-        <span className="text-xs md:text-sm font-medium text-gray-400 hidden sm:inline">
+        <span className="text-xs md:text-sm font-medium text-brand hidden sm:inline">
           Admin Panel / FineXa
         </span>
       </div>
