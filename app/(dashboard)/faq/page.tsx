@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, ChevronDown, ChevronUp, X } from 'lucide-react';
 
 interface FaqItem {
@@ -12,14 +12,8 @@ interface FaqItem {
 }
 
 export default function FaqManagementAdmin() {
-  const [faqs, setFaqs] = useState<FaqItem[]>([
-    { id: 1, category: 'Tentang Platform', question: 'Apa itu FineXa?', answer: 'FineXa adalah platform penasihat investasi digital yang membantu Anda mengelola finansial berdasarkan profil risiko pribadi.', status: 'published' },
-    { id: 2, category: 'Rekomendasi Investasi', question: 'Bagaimana sistem rekomendasi investasi FineXa bekerja?', answer: 'Sistem kami menganalisis jawaban kuesioner profil risiko Anda lalu mencocokkannya dengan algoritma alokasi aset yang optimal.', status: 'published' },
-    { id: 3, category: 'Edukasi Investasi', question: 'Apa saja yang dipelajari di Edukasi Investasi FineXa?', answer: 'Mulai dari dasar-dasar reksa dana, saham, obligasi, hingga manajemen portofolio tingkat lanjut.', status: 'published' },
-    { id: 4, category: 'Profil Risiko', question: 'Apa itu Profil Risiko?', answer: 'Profil risiko adalah tingkat toleransi atau kesiapan seorang investor dalam menghadapi kemungkinan penurunan nilai investasi.', status: 'published' },
-    { id: 5, category: 'Keamanan Data', question: 'Bagaimana perlindungan data pengguna di FineXa?', answer: 'Semua data pengguna dienkripsi dengan standar bank tingkat tinggi dan diproteksi ketat sesuai regulasi yang berlaku.', status: 'published' },
-    { id: 6, category: 'Risiko Investasi', question: 'Memahami Risiko Investasi', answer: 'Setiap investasi memiliki risiko, termasuk risiko pasar, risiko likuiditas, dan risiko inflasi yang wajib dipahami sebelum memulai.', status: 'published' },
-  ]);
+
+  const [faqs, setFaqs] = useState<FaqItem[]>([]);
 
   const [isAdding, setIsAdding] = useState(false);
   const [openFaqId, setOpenFaqId] = useState<number | null>(null);
@@ -34,40 +28,117 @@ export default function FaqManagementAdmin() {
   const publishedCount = faqs.filter((f) => f.status === 'published').length;
   const unpublishedCount = faqs.filter((f) => f.status === 'unpublished').length;
 
-  const toggleFaq = (id: number) => {
-    setFaqs ((prev) =>
-    prev.map((f)=>
-    f.id === id
-  ?{...f, status: f.status === 'published' ? 'unpublished' : 'published'}
-    : f
-  )
-)
-  };
-
-  const handleConfirmDelete = () => {
-    if (deleteFaqTarget) {
-      setFaqs(faqs.filter((f) => f.id !== deleteFaqTarget.id));
-      setDeleteFaqTarget(null);
+  //Fungsi pembaca data (Read) dari Express
+  const fetchFaqs = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/faq`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const result = await res.json();
+      
+      if (res.ok) {
+        // PENERJEMAHAN DARI DATABASE (Kiri) KE FRONTEND (Kanan)
+        const formattedData = result.data.map((item: any) => ({
+          id: item.id_faq,          
+          category: item.kategori,  
+          question: item.pertanyaan,
+          answer: item.jawaban,     
+          status: item.status       
+        }));
+        
+        setFaqs(formattedData);
+      }
+    } catch (error) {
+      console.error("Gagal mengambil data FAQ:", error);
     }
   };
 
-  const handleSaveFaq = (e: React.FormEvent) => {
+  // Panggil data secara otomatis saat halaman pertama kali dibuka
+  useEffect(() => {
+    fetchFaqs();
+  }, []);
+
+  //Fungsi Ubah Status (Update)
+  const toggleFaq = async (id: number) => {
+    const targetFaq = faqs.find(f => f.id === id);
+    if (!targetFaq) return;
+
+    const newStatus = targetFaq.status === 'published' ? 'unpublished' : 'published';
+
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/faq/${id}`, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` 
+        },
+        body: JSON.stringify({ status: newStatus }) 
+      });
+
+      if (res.ok) {
+        setFaqs((prev) => prev.map((f) => f.id === id ? { ...f, status: newStatus } : f));
+      }
+    } catch (error) {
+      console.error("Gagal update status:", error);
+    }
+  };
+
+  // 4. Fungsi Hapus Data (Delete)
+  const handleConfirmDelete = async () => {
+    if (!deleteFaqTarget) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/faq/${deleteFaqTarget.id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (res.ok) {
+        setFaqs(faqs.filter((f) => f.id !== deleteFaqTarget.id));
+        setDeleteFaqTarget(null);
+      }
+    } catch (error) {
+      console.error("Gagal menghapus FAQ:", error);
+    }
+  };
+
+  // 5. Fungsi Tambah Data (Create)
+  const handleSaveFaq = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newQuestion || !newAnswer) return alert('Pertanyaan dan Jawaban wajib diisi!');
 
-    const newFaqItem: FaqItem = {
-      id: Date.now(),
-      category: newCategory,
-      question: newQuestion,
-      answer: newAnswer,
-      status: isActive ? 'published' : 'unpublished',
-    };
+    try {
+      const token = localStorage.getItem('token');
+      
+      const payload = {
+        kategori: newCategory,   
+        pertanyaan: newQuestion, 
+        jawaban: newAnswer,      
+        status: isActive ? 'published' : 'unpublished',
+      };
 
-    setFaqs([newFaqItem, ...faqs]);
-    setNewQuestion('');
-    setNewAnswer('');
-    setIsActive(false);
-    setIsAdding(false);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/faq`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` 
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) {
+        fetchFaqs(); 
+        setNewQuestion('');
+        setNewAnswer('');
+        setIsActive(false);
+        setIsAdding(false);
+      }
+    } catch (error) {
+      console.error("Gagal menyimpan FAQ:", error);
+    }
   };
 
   return (
@@ -108,7 +179,8 @@ export default function FaqManagementAdmin() {
           {faqs.map((faq) => (
             <div key={faq.id} className="p-5 hover:bg-gray-50/50 transition">
               <div className="flex justify-between items-start gap-4">
-                <div className="flex-1 cursor-pointer" onClick={() => toggleFaq(faq.id)}>
+                {/* PERBAIKAN 1: Klik area teks hanya membuka jawaban, tidak mengubah API status */}
+                <div className="flex-1 cursor-pointer" onClick={() => setOpenFaqId(openFaqId === faq.id ? null : faq.id)}>
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-xs px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium">
                       {faq.category}
@@ -130,28 +202,28 @@ export default function FaqManagementAdmin() {
                     )}
                   </h4>
                 </div>
-               <div className="flex items-center gap-2">
-                <button
-                onClick={() => toggleFaq(faq.id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${
-                  faq.status === 'published'
-                  ? 'bg-amber-50 text-amber-600 hover:bg-amber-100': 'bg-emerald-600 text-white hover:bg-emerald-700'
-                }`}
-                >
-                  {faq.status === 'published' ? 'Unpublish' : 'Publish'}
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => toggleFaq(faq.id)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${
+                      faq.status === 'published'
+                        ? 'bg-amber-50 text-amber-600 hover:bg-amber-100' : 'bg-emerald-600 text-white hover:bg-emerald-700'
+                    }`}
+                  >
+                    {faq.status === 'published' ? 'Unpublish' : 'Publish'}
                   </button>
                   <button
-                  onClick={() => setDeleteFaqTarget(faq)}
-                  className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition"
+                    onClick={() => setDeleteFaqTarget(faq)}
+                    className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition"
                   >
                     <Trash2 className="w-4 h-4" />
-                    </button>
-                    </div>
-                    </div>
-                <div className={`grid transition-all duration-300 ease-in-out ${
-                        openFaqId === faq.id ? 'grid-rows-[1fr] opacity-100 mt-3 pt-3 border-t border-gray-100' : 'grid-rows-[0fr] opacity-0'
-                      } overflow-hidden`}
-                  >
+                  </button>
+                </div>
+              </div>
+              <div className={`grid transition-all duration-300 ease-in-out ${
+                  openFaqId === faq.id ? 'grid-rows-[1fr] opacity-100 mt-3 pt-3 border-t border-gray-100' : 'grid-rows-[0fr] opacity-0'
+                } overflow-hidden`}
+              >
                 <div className="overflow-hidden text-sm text-gray-600 leading-relaxed">
                   {faq.answer}
                 </div>
@@ -174,10 +246,11 @@ export default function FaqManagementAdmin() {
             <form onSubmit={handleSaveFaq} className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-1">Kategori</label>
+                {/* PERBAIKAN 2: Tambah text-gray-900 dan bg-white agar teks hitam pekat */}
                 <select
                   value={newCategory}
                   onChange={(e) => setNewCategory(e.target.value)}
-                  className="w-full border rounded-xl p-2.5 text-sm focus:outline-none focus:border-emerald-600"
+                  className="w-full border rounded-xl p-2.5 text-sm focus:outline-none focus:border-emerald-600 text-gray-900 bg-white"
                 >
                   <option value="Tentang Platform">Tentang Platform</option>
                   <option value="Rekomendasi Investasi">Rekomendasi Investasi</option>
@@ -189,23 +262,25 @@ export default function FaqManagementAdmin() {
 
               <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-1">Pertanyaan</label>
+                {/* PERBAIKAN 3: Tambah text-gray-900 dan placeholder-gray-400 */}
                 <input
                   type="text"
                   value={newQuestion}
                   onChange={(e) => setNewQuestion(e.target.value)}
                   placeholder="Masukkan pertanyaan FAQ..."
-                  className="w-full border rounded-xl p-2.5 text-sm focus:outline-none focus:border-emerald-600"
+                  className="w-full border rounded-xl p-2.5 text-sm focus:outline-none focus:border-emerald-600 text-gray-900 bg-white placeholder-gray-400"
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-1">Jawaban</label>
+                {/* PERBAIKAN 4: Tambah text-gray-900 dan placeholder-gray-400 */}
                 <textarea
                   rows={3}
                   value={newAnswer}
                   onChange={(e) => setNewAnswer(e.target.value)}
                   placeholder="Masukkan penjelasan/jawaban..."
-                  className="w-full border rounded-xl p-2.5 text-sm focus:outline-none focus:border-emerald-600"
+                  className="w-full border rounded-xl p-2.5 text-sm focus:outline-none focus:border-emerald-600 text-gray-900 bg-white placeholder-gray-400"
                 />
               </div>
 

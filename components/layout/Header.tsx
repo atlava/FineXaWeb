@@ -1,44 +1,67 @@
 'use client';
 
-import React from 'react';
-import { Menu, Bell } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Menu } from 'lucide-react';
 
 interface HeaderProps {
   onOpenSidebar: () => void;
 }
 
-<header className="sticky top-0 z-30 flex h-20 items-center justify-between border-b border-gray-100 bg-white px-10">
-  ...
-</header>
-
 export default function Header({ onOpenSidebar }: HeaderProps) {
+  // State untuk data profil admin yang dinamis
+  const [userName, setUserName] = useState('Admin FineXa');
+  const [userEmail, setUserEmail] = useState('admin@gmail.com');
+
+ useEffect(() => {
+    const storedName = localStorage.getItem('nama');
+    const storedEmail = localStorage.getItem('email');
+
+    if (storedName) setUserName(storedName);
+    if (storedEmail) setUserEmail(storedEmail);
+  }, []);
+
+  // Fungsi untuk membuat inisial otomatis dari nama (Contoh: "Hero Manurung" -> "HM")
+  const getInitials = (name: string) => {
+    const words = name.trim().split(' ');
+    if (words.length >= 2) {
+      return (words[0][0] + words[1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  };
+
   return (
-    <header className="h-16 bg-white border-b border-gray-100 px-4 md:px-8 flex items-center justify-between sticky top-0 z-30">
+    <header className="h-16 bg-white border-b border-gray-100 px-4 md:px-8 flex items-center justify-between sticky top-0 z-30 shadow-xs">
       <div className="flex items-center gap-3">
         <button
           onClick={onOpenSidebar}
-          className="md:hidden p-2 text-gray-500 hover:bg-brand rounded-lg"
+          className="md:hidden p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition"
         >
           <Menu className="w-5 h-5" />
         </button>
-        <span className="text-xs md:text-sm font-medium text-brand hidden sm:inline">
-          Admin Panel / FineXa
-        </span>
+        
+        {/* Teks Header yang sudah dipercantik */}
+        <div className="flex flex-col">
+          <span className="text-xs md:text-sm font-bold text-gray-900 tracking-tight">
+            FineXa Management System
+          </span>
+          <span className="text-[10px] text-gray-400 hidden sm:inline">
+            Pusat Kendali & Analisis Platform
+          </span>
+        </div>
       </div>
 
-      {/* Profil Admin & Notifikasi */}
+      {/* Profil Admin (Tanpa Lonceng) */}
       <div className="flex items-center gap-4">
-        <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-xl relative">
-          <Bell className="w-5 h-5" />
-          <span className="w-2 h-2 bg-emerald-500 rounded-full absolute top-2 right-2" />
-        </button>
-        <div className="flex items-center gap-3 border-l border-gray-100 pl-4">
-          <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 font-bold flex items-center justify-center text-xs">
-            AD
+        <div className="flex items-center gap-3 pl-2">
+          {/* Kotak Inisial Dinamis */}
+          <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 font-extrabold flex items-center justify-center text-xs shadow-inner">
+            {getInitials(userName)}
           </div>
-          <div className="hidden sm:flex flex-col">
-            <span className="text-xs font-bold text-gray-900">Admin FineXa</span>
-            <span className="text-[10px] text-gray-400">admin@gmail.com</span>
+          
+          {/* Nama & Email Dinamis dari Akun Login */}
+          <div className="hidden sm:flex flex-col text-left">
+            <span className="text-xs font-bold text-gray-900">{userName}</span>
+            <span className="text-[10px] text-gray-400 font-medium">{userEmail}</span>
           </div>
         </div>
       </div>

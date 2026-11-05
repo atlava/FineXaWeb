@@ -16,9 +16,28 @@ export default function DashboardLayout({
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-  const handleConfirmLogout = () => {
-    setShowLogoutModal(false);
-    router.push('/login');
+  const handleConfirmLogout = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (token) {
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/logout`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}` // Bawa kunci kamarnya ke resepsionis
+          }
+        });
+      }
+    } catch (error) {
+      console.error("Gagal menghubungi server untuk logout", error);
+    } finally {
+      // 3. Wajib: Bersihkan memori browser dari token lama agar tidak nyangkut
+      localStorage.removeItem('token');
+      
+      // 4. Tutup modal dan lempar ke halaman login
+      setShowLogoutModal(false);
+      router.push('/login');
+    }
   };
 
   return (

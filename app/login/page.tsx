@@ -6,13 +6,50 @@ import { useRouter } from 'next/navigation';
 import Image from "next/image";
 
 export default function LoginAdmin() {
-  const router = useRouter();
+const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState(''); // Untuk menampung pesan error dari backend
+  const [isLoading, setIsLoading] = useState(false); // Untuk efek loading tombol
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    router.push('/');
+    setError('');
+    setIsLoading(true);
+    
+    try {
+      // Menembak API Express milikmu
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, platform: 'web' }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Ambil token, nama, dan email dari response JSON backend
+        const token = data.token || (data.data && data.data.token);
+        const nama = data.nama || (data.data && data.data.nama);
+        const userEmail = data.email || (data.email || (data.data && data.data.email));
+
+        // Simpan semuanya ke browser localStorage agar bisa dibaca Header
+        if (token) localStorage.setItem('token', token);
+        if (nama) localStorage.setItem('nama', nama);
+        if (userEmail) localStorage.setItem('email', userEmail);
+        
+        // Login sukses, meluncur ke dashboard!
+        router.push('/');
+      } else {
+        // Tangkap pesan error dari Express (misal: "Password salah")
+        setError(data.message || 'Email atau password salah.');
+      }
+    } catch (err) {
+      console.error(err);
+      setError('Gagal terhubung ke server. Pastikan backend menyala.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -69,6 +106,11 @@ export default function LoginAdmin() {
         <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md">
           <h2 className="text-3xl font-bold text-gray-800 mb-2">Selamat Datang Kembali</h2>
           <p className="text-sm text-gray-500 mb-6">Masuk ke akun FineXa Anda untuk melanjutkan</p>
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100">
+              {error}
+            </div>
+          )}
           <form onSubmit={handleLogin} className="flex flex-col gap-4">
             <div className="flex flex-col">
               <label className="text-sm font-medium text-gray-700 mb-1">Alamat Email</label>
@@ -77,7 +119,7 @@ export default function LoginAdmin() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="admin@gmail.com"
-                className="border border-gray-300 rounded-lg p-3 focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition-all text-sm"
+                className="border border-gray-300 rounded-lg p-3 focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition-all text-sm text-gray-900 bg-white placeholder-gray-400"
                 required
               />
             </div>
@@ -88,7 +130,7 @@ export default function LoginAdmin() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Masukkan password"
-                className="border border-gray-300 rounded-lg p-3 focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition-all text-sm"
+                className="border border-gray-300 rounded-lg p-3 focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 transition-all text-sm text-gray-900 bg-white placeholder-gray-400"
                 required
               />
             </div>
@@ -108,8 +150,7 @@ export default function LoginAdmin() {
               type="submit"
               className="w-full bg-[#0F3D32] hover:bg-[#0B2E26] text-white font-bold py-3 rounded-xl text-xs md:text-sm shadow-md hover:shadow-lg transition-all duration-200"
             >
-              Masuk ke Dashboard
-            </button>
+            {isLoading ? 'Memeriksa Data...' : 'Masuk ke Dashboard'}            </button>
           </form>
         </div>
       </div>
