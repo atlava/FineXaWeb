@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Users, Activity, FileText, TrendingUp } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -15,7 +16,9 @@ import {
   Cell,
 } from 'recharts';
 
+
 export default function DashboardAdmin() {
+  const router = useRouter();
   const [metrics, setMetrics] = useState({ 
     totalUsers: 0, 
     activeSessions: 0, 
@@ -64,8 +67,17 @@ export default function DashboardAdmin() {
   };
 
   useEffect(() => {
+    const token = localStorage.getItem('token');
+    
+    // Jika belum login (tidak ada token), tendang ke halaman login
+    if (!token) {
+      router.push('/login');
+      return; 
+    }
+
+    // Jika sudah login, tarik data metrik dasbor
     fetchDashboardData();
-  }, []);
+  }, [router]);
 
   return (
     <div className="space-y-6">

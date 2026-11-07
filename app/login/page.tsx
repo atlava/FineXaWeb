@@ -15,6 +15,13 @@ const router = useRouter();
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError("Email tidak valid. Pastikan terdapat tanda '@' dan domain (contoh: user@mail.com).");
+      return; 
+    }
+
     setIsLoading(true);
     
     try {
@@ -115,7 +122,7 @@ const router = useRouter();
             <div className="flex flex-col">
               <label className="text-sm font-medium text-gray-700 mb-1">Alamat Email</label>
               <input
-                type="email"
+                type="text"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="admin@gmail.com"

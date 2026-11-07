@@ -23,6 +23,7 @@ export default function FaqManagementAdmin() {
   const [newAnswer, setNewAnswer] = useState('');
   const [isActive, setIsActive] = useState(false);
   const [newCategory, setNewCategory] = useState('Tentang Platform');
+  const [errorMsg, setErrorMsg] = useState('');
 
   const totalKonten = faqs.length;
   const publishedCount = faqs.filter((f) => f.status === 'published').length;
@@ -105,10 +106,15 @@ export default function FaqManagementAdmin() {
     }
   };
 
-  // 5. Fungsi Tambah Data (Create)
+ // 5. Fungsi Tambah Data (Create)
   const handleSaveFaq = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newQuestion || !newAnswer) return alert('Pertanyaan dan Jawaban wajib diisi!');
+    setErrorMsg(''); // Reset pesan error setiap kali tombol ditekan
+
+    if (!newQuestion || !newAnswer) {
+      setErrorMsg('Pertanyaan dan Jawaban wajib diisi!');
+      return;
+    }
 
     try {
       const token = localStorage.getItem('token');
@@ -129,15 +135,22 @@ export default function FaqManagementAdmin() {
         body: JSON.stringify(payload)
       });
 
+      const result = await res.json();
+
       if (res.ok) {
         fetchFaqs(); 
         setNewQuestion('');
         setNewAnswer('');
         setIsActive(false);
         setIsAdding(false);
+        setErrorMsg(''); // Bersihkan error jika sukses
+      } else {
+        // Tampilkan pesan dari backend ke dalam state
+        setErrorMsg(result.message);
       }
     } catch (error) {
       console.error("Gagal menyimpan FAQ:", error);
+      setErrorMsg("Terjadi kesalahan sistem saat menghubungi server.");
     }
   };
 
@@ -283,6 +296,13 @@ export default function FaqManagementAdmin() {
                   className="w-full border rounded-xl p-2.5 text-sm focus:outline-none focus:border-emerald-600 text-gray-900 bg-white placeholder-gray-400"
                 />
               </div>
+
+              {/* TAMPILKAN PESAN ERROR DI SINI */}
+              {errorMsg && (
+                <p className="text-sm font-semibold text-red-500 mt-1">
+                  * {errorMsg}
+                </p>
+              )}
 
               <div className="flex items-center gap-2">
                 <input
