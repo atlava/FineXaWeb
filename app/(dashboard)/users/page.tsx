@@ -11,6 +11,9 @@ interface UserData {
   joinDate: string;
   lastActive: string;
   roleColor: string;
+  no_telepon?: string;     
+  lokasi?: string;         
+  tanggal_lahir?: string;  
 }
 
 export default function UserManagementAdmin() {
@@ -67,7 +70,10 @@ export default function UserManagementAdmin() {
             joinDate: formatDate(item.created_at || item.createdat), 
             // Mengambil dari last_login_at atau updated_at
             lastActive: formatDate(item.last_login_at || item.updated_at),
-            roleColor: badgeColor
+            roleColor: badgeColor,
+            no_telepon: item.no_telepon,
+            lokasi: item.lokasi,
+            tanggal_lahir: item.tanggal_lahir
           };
         });
         
@@ -192,10 +198,10 @@ export default function UserManagementAdmin() {
         </div>
       </div>
 
-      {/* Modal Detail User */}
+{/* Modal Detail User */}
       {selectedUser && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl md:rounded-3xl w-full max-w-[380px] p-5 md:p-6 shadow-2xl relative border border-gray-50">
+          <div className="bg-white rounded-2xl md:rounded-3xl w-full max-w-[400px] p-5 md:p-6 shadow-2xl relative border border-gray-50 max-h-[90vh] overflow-y-auto">
             <button
               onClick={() => setSelectedUser(null)}
               className="absolute right-4 md:right-5 top-4 md:top-5 p-1.5 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition"
@@ -206,7 +212,7 @@ export default function UserManagementAdmin() {
             <h3 className="text-lg md:text-xl font-bold text-gray-900">Detail User</h3>
             <p className="text-gray-400 text-[10px] md:text-xs mt-0.5">Informasi lengkap mengenai User</p>
 
-            <div className="flex items-center gap-3 md:gap-4 my-5 md:my-6">
+            <div className="flex items-center gap-3 md:gap-4 my-4 md:my-5">
               <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-xl font-bold flex-shrink-0">
                 {selectedUser.name.charAt(0).toUpperCase()}
               </div>
@@ -221,11 +227,54 @@ export default function UserManagementAdmin() {
             <div className="space-y-2 md:space-y-3">
               <div className="flex items-center gap-3 p-3 md:p-3.5 bg-gray-50 rounded-xl md:rounded-2xl border border-gray-100">
                 <Mail className="w-3.5 h-3.5 md:w-4 md:h-4 text-gray-400 flex-shrink-0" />
-                <span className="text-[11px] md:text-xs text-gray-900 font-medium truncate">{selectedUser.email}</span>
+                <div className="flex flex-col truncate">
+                  <span className="text-[10px] text-gray-400 font-semibold">Email</span>
+                  <span className="text-[11px] md:text-xs text-gray-900 font-medium truncate">{selectedUser.email}</span>
+                </div>
               </div>
+
+              {/* Tambahan Nomor Telepon */}
+              <div className="flex items-center gap-3 p-3 md:p-3.5 bg-gray-50 rounded-xl md:rounded-2xl border border-gray-100">
+                <Wallet className="w-3.5 h-3.5 md:w-4 md:h-4 text-gray-400 flex-shrink-0" />
+                <div className="flex flex-col truncate">
+                  <span className="text-[10px] text-gray-400 font-semibold">Nomor Telepon</span>
+                  <span className="text-[11px] md:text-xs text-gray-900 font-medium truncate">
+                    {/* @ts-ignore */}
+                    {selectedUser.no_telepon || 'Belum diatur'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Tambahan Lokasi */}
               <div className="flex items-center gap-3 p-3 md:p-3.5 bg-gray-50 rounded-xl md:rounded-2xl border border-gray-100">
                 <Calendar className="w-3.5 h-3.5 md:w-4 md:h-4 text-gray-400 flex-shrink-0" />
-                <span className="text-[11px] md:text-xs text-gray-900 font-medium truncate">Bergabung: {selectedUser.joinDate}</span>
+                <div className="flex flex-col truncate">
+                  <span className="text-[10px] text-gray-400 font-semibold">Lokasi</span>
+                  <span className="text-[11px] md:text-xs text-gray-900 font-medium truncate">
+                    {/* @ts-ignore */}
+                    {selectedUser.lokasi || 'Belum diatur'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Tambahan Tanggal Lahir */}
+              <div className="flex items-center gap-3 p-3 md:p-3.5 bg-gray-50 rounded-xl md:rounded-2xl border border-gray-100">
+                <Calendar className="w-3.5 h-3.5 md:w-4 md:h-4 text-gray-400 flex-shrink-0" />
+                <div className="flex flex-col truncate">
+                  <span className="text-[10px] text-gray-400 font-semibold">Tanggal Lahir</span>
+                  <span className="text-[11px] md:text-xs text-gray-900 font-medium truncate">
+                    {/* @ts-ignore */}
+                    {selectedUser.tanggal_lahir || 'Belum diatur'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 p-3 md:p-3.5 bg-gray-50 rounded-xl md:rounded-2xl border border-gray-100">
+                <Calendar className="w-3.5 h-3.5 md:w-4 md:h-4 text-gray-400 flex-shrink-0" />
+                <div className="flex flex-col truncate">
+                  <span className="text-[10px] text-gray-400 font-semibold">Bergabung</span>
+                  <span className="text-[11px] md:text-xs text-gray-900 font-medium truncate">{selectedUser.joinDate}</span>
+                </div>
               </div>
             </div>
           </div>
