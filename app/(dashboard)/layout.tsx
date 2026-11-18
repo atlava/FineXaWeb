@@ -6,6 +6,13 @@ import Sidebar from "@/components/layout/Sidebar";
 import Header from "@/components/layout/Header";
 import LogoutModal from '../../components/layout/LogoutModal';
 
+interface LogoutError {
+  message: string;
+  code?: string;
+}
+
+const LOGOUT_ERROR_MESSAGE =
+  'Terjadi gangguan koneksi ke server saat memvalidasi status logout. Sesi Anda masih aktif demi keamanan akun.';
 
 export default function DashboardLayout({
   children,
@@ -16,28 +23,51 @@ export default function DashboardLayout({
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
+  // ===== ERROR STATE LOGOUT =====
+  const [logoutError, setLogoutError] = useState<LogoutError | null>(null);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
   const handleConfirmLogout = async () => {
+    setLogoutError(null);
+    setIsLoggingOut(true);
+
     try {
       const token = localStorage.getItem('token');
-      if (token) {
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/logout`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}` // Bawa kunci kamarnya ke resepsionis
-          }
-        });
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/logout`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (res.ok) {
+        // Logout sukses: bersihkan data sesi lalu ke halaman login
+        localStorage.removeItem('token');
+        localStorage.removeItem('nama');
+        localStorage.removeItem('email');
+        setShowLogoutModal(false);
+        router.push('/login');
+        return;
       }
-    } catch (error) {
-      console.error("Gagal menghubungi server untuk logout", error);
+
+      // Server membalas tapi gagal
+      setLogoutError({
+        message: LOGOUT_ERROR_MESSAGE,
+        code: `ERR_SESSION_LOGOUT_FAILED (Status ${res.status})`,
+      });
+    } catch {
+      // Server mati / timeout
+      setLogoutError({
+        message: LOGOUT_ERROR_MESSAGE,
+        code: 'ERR_SESSION_LOGOUT_TIMEOUT',
+      });
     } finally {
-      // 3. Wajib: Bersihkan memori browser dari token lama agar tidak nyangkut
-      localStorage.removeItem('token');
-      
-      // 4. Tutup modal dan lempar ke halaman login
-      setShowLogoutModal(false);
-      router.push('/login');
+      setIsLoggingOut(false);
     }
+  };
+
+  // Tutup modal + reset error supaya tidak muncul lagi saat dibuka ulang
+  const handleCloseLogout = () => {
+    setShowLogoutModal(false);
+    setLogoutError(null);
   };
 
   return (
@@ -56,15 +86,17 @@ export default function DashboardLayout({
         <main className="flex-1 overflow-y-auto">
           <div className="mx-auto w-full max-w-7xl p-4 md:p-8">
             {children}
-            </div>
-            </main>
+          </div>
+        </main>
       </div>
 
       {/* MODAL LOGOUT */}
       <LogoutModal
         isOpen={showLogoutModal}
-        onClose={() => setShowLogoutModal(false)}
+        onClose={handleCloseLogout}
         onConfirm={handleConfirmLogout}
+        error={logoutError}
+        isLoggingOut={isLoggingOut}
       />
     </div>
   );

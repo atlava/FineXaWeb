@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Search, Eye, Trash2, X, Mail, Wallet, Calendar } from 'lucide-react';
+import { Search, Eye, Trash2, X, Mail, Wallet, Calendar, AlertCircle, RefreshCw } from 'lucide-react';
+import DeleteUserModal from '@/components/ui/DeleteUserModal';
 
 interface UserData {
   id: number;
@@ -11,18 +12,28 @@ interface UserData {
   joinDate: string;
   lastActive: string;
   roleColor: string;
-  no_telepon?: string;     
-  lokasi?: string;         
-  tanggal_lahir?: string;  
+  no_telepon?: string;
+  lokasi?: string;
+  tanggal_lahir?: string;
+}
+
+interface ApiErrorState {
+  status: number;
+  message: string;
 }
 
 export default function UserManagementAdmin() {
-  // Kosongkan data dummy
   const [users, setUsers] = useState<UserData[]>([]);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
   const [deleteUserTarget, setDeleteUserTarget] = useState<UserData | null>(null);
+
+  // ===== ERROR STATES =====
+  const [listError, setListError] = useState<ApiErrorState | null>(null); // gagal load daftar user
+  const [deleteError, setDeleteError] = useState<string | null>(null); // gagal hapus user
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Fungsi pencarian (berjalan otomatis di sisi frontend)
   const filteredUsers = users.filter(
@@ -32,55 +43,64 @@ export default function UserManagementAdmin() {
   );
 
   // Fungsi pembaca data (Read) dari Express
-  // 2. Fungsi pembaca data (Read) dari Express
   const fetchUsers = async () => {
+    setIsLoading(true);
+    setListError(null);
+
     try {
       const token = localStorage.getItem('token');
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
-      const result = await res.json();
-      
+      const result = await res.json().catch(() => ({}));
+
       if (res.ok) {
-        // Menerjemahkan data MySQL 
+        // Menerjemahkan data MySQL
         const formattedData = result.data.map((item: any) => {
           // Menentukan warna badge berdasarkan role/profil risiko
           const userRole = item.role || item.profil_risiko || 'User';
           let badgeColor = 'bg-gray-50 text-gray-600';
-          
+
           if (userRole.toLowerCase().includes('moderat')) badgeColor = 'bg-emerald-50 text-emerald-600';
           else if (userRole.toLowerCase().includes('konservatif')) badgeColor = 'bg-blue-50 text-blue-600';
           else if (userRole.toLowerCase().includes('agresif')) badgeColor = 'bg-amber-50 text-amber-600';
           else if (userRole.toLowerCase() === 'admin') badgeColor = 'bg-purple-50 text-purple-600';
 
-          
           // Fungsi memformat tanggal MySQL
           const formatDate = (dateString: string) => {
             if (!dateString) return '-';
             const date = new Date(dateString);
-            return isNaN(date.getTime()) ? '-' : date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+            return isNaN(date.getTime())
+              ? '-'
+              : date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
           };
 
           return {
-            id: item.id_user,                     
-            name: item.nama_lengkap,              
+            id: item.id_user,
+            name: item.nama_lengkap,
             email: item.email,
             role: userRole,
-            // Mengambil dari created_at, jika kosong ambil createdat atau '-'
-            joinDate: formatDate(item.created_at || item.createdat), 
-            // Mengambil dari last_login_at atau updated_at
+            joinDate: formatDate(item.created_at || item.createdat),
             lastActive: formatDate(item.last_login_at || item.updated_at),
             roleColor: badgeColor,
             no_telepon: item.no_telepon,
             lokasi: item.lokasi,
-            tanggal_lahir: item.tanggal_lahir
+            tanggal_lahir: item.tanggal_lahir,
           };
         });
-        
+
         setUsers(formattedData);
+      } else {
+        setListError({
+          status: res.status,
+          message: result.message ?? 'Gagal memuat daftar user dari server.',
+        });
       }
     } catch (error) {
-      console.error("Gagal mengambil data user:", error);
+      console.error('Gagal mengambil data user:', error);
+      setListError({ status: 0, message: 'Tidak dapat terhubung ke server.' });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -92,24 +112,46 @@ export default function UserManagementAdmin() {
   // Fungsi Hapus Data (Delete)
   const handleConfirmDelete = async () => {
     if (!deleteUserTarget) return;
+    setDeleteError(null);
+    setIsDeleting(true);
 
     try {
       const token = localStorage.getItem('token');
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/${deleteUserTarget.id}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (res.ok) {
         // Hapus user dari layar tanpa perlu refresh halaman
-        setUsers(users.filter((u) => u.id !== deleteUserTarget.id));
+        setUsers((prev) => prev.filter((u) => u.id !== deleteUserTarget.id));
         setDeleteUserTarget(null);
+        return;
+      }
+
+      const result = await res.json().catch(() => ({}));
+
+      if (res.status >= 500) {
+        // Server error / database gangguan (500, 502, 503, dst.)
+        setDeleteError(
+          `Terjadi gangguan pada server backend (Status ${res.status}). User "${deleteUserTarget.name}" belum dihapus. Silakan coba lagi beberapa saat.`
+        );
       } else {
-        alert("Gagal menghapus user. Pastikan Anda memiliki izin.");
+        // Status lain (4xx): pakai pesan dari backend kalau ada
+        setDeleteError(result.message ?? 'Operasi tidak dapat diproses. Pastikan Anda memiliki izin.');
       }
     } catch (error) {
-      console.error("Error menghapus user:", error);
+      console.error('Error menghapus user:', error);
+      // Fetch gagal total (server mati / timeout)
+      setDeleteError('Tidak dapat terhubung ke server. Silakan coba lagi.');
+    } finally {
+      setIsDeleting(false);
     }
+  };
+
+  const closeDeleteModal = () => {
+    setDeleteUserTarget(null);
+    setDeleteError(null);
   };
 
   return (
@@ -118,6 +160,34 @@ export default function UserManagementAdmin() {
         <h1 className="text-2xl md:text-3xl font-bold text-gray-950 tracking-tight">User Management</h1>
         <p className="text-gray-500 text-xs md:text-sm mt-1">Kelola pengguna dan akses platform FineXa</p>
       </div>
+
+      {/* Banner error saat daftar user gagal dimuat */}
+      {listError && (
+        <div
+          role="alert"
+          className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-red-200 bg-red-50 p-4"
+        >
+          <div className="flex items-start gap-3">
+            <div className="p-2 rounded-xl bg-red-100 text-red-600 shrink-0">
+              <AlertCircle className="w-4 h-4" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-red-800">
+                Gagal Memuat Data User {listError.status > 0 && `(Status ${listError.status})`}
+              </p>
+              <p className="text-xs text-red-700 mt-0.5">{listError.message}</p>
+            </div>
+          </div>
+          <button
+            onClick={fetchUsers}
+            disabled={isLoading}
+            className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 disabled:opacity-60 text-white text-xs font-semibold shrink-0"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+            {isLoading ? 'Memuat...' : 'Coba Lagi'}
+          </button>
+        </div>
+      )}
 
       <div className="bg-white p-3 md:p-4 rounded-xl border border-gray-100 shadow-sm relative">
         <div className="relative">
@@ -189,7 +259,11 @@ export default function UserManagementAdmin() {
               ) : (
                 <tr>
                   <td colSpan={5} className="px-6 py-10 text-center text-gray-400 text-sm">
-                    Data user tidak ditemukan.
+                    {isLoading
+                      ? 'Memuat data user...'
+                      : listError
+                      ? 'Data user tidak dapat dimuat.'
+                      : 'Data user tidak ditemukan.'}
                   </td>
                 </tr>
               )}
@@ -198,7 +272,7 @@ export default function UserManagementAdmin() {
         </div>
       </div>
 
-{/* Modal Detail User */}
+      {/* Modal Detail User */}
       {selectedUser && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl md:rounded-3xl w-full max-w-[400px] p-5 md:p-6 shadow-2xl relative border border-gray-50 max-h-[90vh] overflow-y-auto">
@@ -233,37 +307,34 @@ export default function UserManagementAdmin() {
                 </div>
               </div>
 
-              {/* Tambahan Nomor Telepon */}
+              {/* Nomor Telepon */}
               <div className="flex items-center gap-3 p-3 md:p-3.5 bg-gray-50 rounded-xl md:rounded-2xl border border-gray-100">
                 <Wallet className="w-3.5 h-3.5 md:w-4 md:h-4 text-gray-400 flex-shrink-0" />
                 <div className="flex flex-col truncate">
                   <span className="text-[10px] text-gray-400 font-semibold">Nomor Telepon</span>
                   <span className="text-[11px] md:text-xs text-gray-900 font-medium truncate">
-                    {/* @ts-ignore */}
                     {selectedUser.no_telepon || 'Belum diatur'}
                   </span>
                 </div>
               </div>
 
-              {/* Tambahan Lokasi */}
+              {/* Lokasi */}
               <div className="flex items-center gap-3 p-3 md:p-3.5 bg-gray-50 rounded-xl md:rounded-2xl border border-gray-100">
                 <Calendar className="w-3.5 h-3.5 md:w-4 md:h-4 text-gray-400 flex-shrink-0" />
                 <div className="flex flex-col truncate">
                   <span className="text-[10px] text-gray-400 font-semibold">Lokasi</span>
                   <span className="text-[11px] md:text-xs text-gray-900 font-medium truncate">
-                    {/* @ts-ignore */}
                     {selectedUser.lokasi || 'Belum diatur'}
                   </span>
                 </div>
               </div>
 
-              {/* Tambahan Tanggal Lahir */}
+              {/* Tanggal Lahir */}
               <div className="flex items-center gap-3 p-3 md:p-3.5 bg-gray-50 rounded-xl md:rounded-2xl border border-gray-100">
                 <Calendar className="w-3.5 h-3.5 md:w-4 md:h-4 text-gray-400 flex-shrink-0" />
                 <div className="flex flex-col truncate">
                   <span className="text-[10px] text-gray-400 font-semibold">Tanggal Lahir</span>
                   <span className="text-[11px] md:text-xs text-gray-900 font-medium truncate">
-                    {/* @ts-ignore */}
                     {selectedUser.tanggal_lahir || 'Belum diatur'}
                   </span>
                 </div>
@@ -281,43 +352,14 @@ export default function UserManagementAdmin() {
         </div>
       )}
 
-      {/* Modal Konfirmasi Hapus */}
-      {deleteUserTarget && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-[320px] p-5 md:p-6 shadow-2xl relative text-center">
-            <button
-              onClick={() => setDeleteUserTarget(null)}
-              className="absolute right-3 md:right-4 top-3 md:top-4 p-1 rounded-full hover:bg-gray-100 text-gray-400 transition"
-            >
-              <X className="w-4 h-4" />
-            </button>
-
-            <div className="w-12 h-12 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-3">
-              <Trash2 className="w-6 h-6" />
-            </div>
-
-            <h3 className="text-sm md:text-base font-bold text-gray-900 px-2 md:px-4">
-              Yakin untuk Menghapus User ini?
-            </h3>
-            <p className="text-gray-500 text-[10px] md:text-xs mt-1 px-2 md:px-4 truncate font-medium">({deleteUserTarget.name})</p>
-
-            <div className="mt-5 md:mt-6 flex flex-col gap-2">
-              <button
-                onClick={handleConfirmDelete}
-                className="w-full py-2 md:py-2.5 bg-red-500 hover:bg-red-600 rounded-lg md:rounded-xl text-[11px] md:text-xs font-bold text-white shadow-sm transition-all"
-              >
-                Ya, Hapus
-              </button>
-              <button
-                onClick={() => setDeleteUserTarget(null)}
-                className="w-full py-2 md:py-2.5 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg md:rounded-xl text-[11px] md:text-xs font-bold text-gray-700 shadow-sm transition-all"
-              >
-                Batalkan
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Modal Konfirmasi Hapus + error state */}
+      <DeleteUserModal
+        user={deleteUserTarget}
+        error={deleteError}
+        isDeleting={isDeleting}
+        onConfirm={handleConfirmDelete}
+        onClose={closeDeleteModal}
+      />
     </div>
   );
 }
