@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, ChevronDown, ChevronUp, X } from 'lucide-react';
+import { Plus, Trash2, ChevronDown, ChevronUp, X, AlertCircle } from 'lucide-react';
 
 interface FaqItem {
   id: number;
@@ -11,8 +11,12 @@ interface FaqItem {
   status: 'published' | 'unpublished';
 }
 
-export default function FaqManagementAdmin() {
+interface ApiErrorState {
+  status: number;
+  message: string;
+}
 
+export default function FaqManagementAdmin() {
   const [faqs, setFaqs] = useState<FaqItem[]>([]);
 
   const [isAdding, setIsAdding] = useState(false);
@@ -23,134 +27,189 @@ export default function FaqManagementAdmin() {
   const [newAnswer, setNewAnswer] = useState('');
   const [isActive, setIsActive] = useState(false);
   const [newCategory, setNewCategory] = useState('Tentang Platform');
-  const [errorMsg, setErrorMsg] = useState('');
+
+  // ===== ERROR STATES =====
+  const [fieldErrors, setFieldErrors] = useState<{ question?: string; answer?: string }>({});
+  const [apiError, setApiError] = useState<ApiErrorState | null>(null);
+  const [listError, setListError] = useState<ApiErrorState | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const totalKonten = faqs.length;
   const publishedCount = faqs.filter((f) => f.status === 'published').length;
   const unpublishedCount = faqs.filter((f) => f.status === 'unpublished').length;
 
-  //Fungsi pembaca data (Read) dari Express
+  // Fungsi pembaca data (Read) dari Express
   const fetchFaqs = async () => {
+    setListError(null);
     try {
       const token = localStorage.getItem('token');
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/faq`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
-      const result = await res.json();
-      
+      const result = await res.json().catch(() => ({}));
+
       if (res.ok) {
-        // PENERJEMAHAN DARI DATABASE (Kiri) KE FRONTEND (Kanan)
         const formattedData = result.data.map((item: any) => ({
-          id: item.id_faq,          
-          category: item.kategori,  
+          id: item.id_faq,
+          category: item.kategori,
           question: item.pertanyaan,
-          answer: item.jawaban,     
-          status: item.status       
+          answer: item.jawaban,
+          status: item.status,
         }));
-        
         setFaqs(formattedData);
+      } else {
+        setListError({
+          status: res.status,
+          message: result.message ?? 'Gagal memuat daftar FAQ dari server.',
+        });
       }
     } catch (error) {
-      console.error("Gagal mengambil data FAQ:", error);
+      console.error('Gagal mengambil data FAQ:', error);
+      setListError({ status: 0, message: 'Tidak dapat terhubung ke server.' });
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Panggil data secara otomatis saat halaman pertama kali dibuka
   useEffect(() => {
     fetchFaqs();
   }, []);
 
-  //Fungsi Ubah Status (Update)
+  // Fungsi Ubah Status (Update)
   const toggleFaq = async (id: number) => {
-    const targetFaq = faqs.find(f => f.id === id);
+    const targetFaq = faqs.find((f) => f.id === id);
     if (!targetFaq) return;
 
     const newStatus = targetFaq.status === 'published' ? 'unpublished' : 'published';
+    setListError(null);
 
     try {
       const token = localStorage.getItem('token');
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/faq/${id}`, {
         method: 'PUT',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` 
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ status: newStatus }) 
+        body: JSON.stringify({ status: newStatus }),
       });
 
       if (res.ok) {
-        setFaqs((prev) => prev.map((f) => f.id === id ? { ...f, status: newStatus } : f));
+        setFaqs((prev) => prev.map((f) => (f.id === id ? { ...f, status: newStatus } : f)));
+      } else {
+        const result = await res.json().catch(() => ({}));
+        setListError({
+          status: res.status,
+          message: result.message ?? 'Gagal mengubah status FAQ. Perubahan belum tersimpan.',
+        });
       }
     } catch (error) {
-      console.error("Gagal update status:", error);
+      console.error('Gagal update status:', error);
+      setListError({ status: 0, message: 'Tidak dapat terhubung ke server.' });
     }
   };
 
-  // 4. Fungsi Hapus Data (Delete)
+  // Fungsi Hapus Data (Delete)
   const handleConfirmDelete = async () => {
     if (!deleteFaqTarget) return;
+    setDeleteError(null);
+    setIsDeleting(true);
 
     try {
       const token = localStorage.getItem('token');
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/faq/${deleteFaqTarget.id}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (res.ok) {
         setFaqs(faqs.filter((f) => f.id !== deleteFaqTarget.id));
         setDeleteFaqTarget(null);
+      } else {
+        const result = await res.json().catch(() => ({}));
+        setDeleteError(
+          result.message ?? `Gagal menghapus FAQ (Status ${res.status}). Silakan coba lagi.`
+        );
       }
     } catch (error) {
-      console.error("Gagal menghapus FAQ:", error);
+      console.error('Gagal menghapus FAQ:', error);
+      setDeleteError('Tidak dapat terhubung ke server. Silakan coba lagi.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
- // 5. Fungsi Tambah Data (Create)
+  const closeDeleteModal = () => {
+    setDeleteFaqTarget(null);
+    setDeleteError(null);
+  };
+
+  const closeModal = () => {
+    setIsAdding(false);
+    setFieldErrors({});
+    setApiError(null);
+  };
+
+  // Fungsi Tambah Data (Create)
   const handleSaveFaq = async (e: React.FormEvent) => {
     e.preventDefault();
-    setErrorMsg(''); // Reset pesan error setiap kali tombol ditekan
+    setApiError(null);
 
-    if (!newQuestion || !newAnswer) {
-      setErrorMsg('Pertanyaan dan Jawaban wajib diisi!');
-      return;
+    const errs: { question?: string; answer?: string } = {};
+    if (newQuestion.trim().length < 10) {
+      errs.question = 'Pertanyaan tidak boleh kosong dan minimal 10 karakter';
     }
+    if (!newAnswer.trim()) {
+      errs.answer = 'Jawaban harus diisi dengan lengkap agar dapat dipublikasikan ke pengguna';
+    }
+    setFieldErrors(errs);
+    if (Object.keys(errs).length > 0) return;
 
+    setIsSaving(true);
     try {
       const token = localStorage.getItem('token');
-      
+
       const payload = {
-        kategori: newCategory,   
-        pertanyaan: newQuestion, 
-        jawaban: newAnswer,      
+        kategori: newCategory,
+        pertanyaan: newQuestion,
+        jawaban: newAnswer,
         status: isActive ? 'published' : 'unpublished',
       };
 
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/faq`, {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` 
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       });
 
-      const result = await res.json();
+      const result = await res.json().catch(() => ({}));
 
       if (res.ok) {
-        fetchFaqs(); 
+        fetchFaqs();
         setNewQuestion('');
         setNewAnswer('');
         setIsActive(false);
         setIsAdding(false);
-        setErrorMsg(''); // Bersihkan error jika sukses
+        setFieldErrors({});
+        setApiError(null);
       } else {
-        // Tampilkan pesan dari backend ke dalam state
-        setErrorMsg(result.message);
+        setApiError({
+          status: res.status,
+          message: result.message ?? 'Terjadi gangguan pada server. Perubahan belum tersimpan.',
+        });
       }
     } catch (error) {
-      console.error("Gagal menyimpan FAQ:", error);
-      setErrorMsg("Terjadi kesalahan sistem saat menghubungi server.");
+      console.error('Gagal menyimpan FAQ:', error);
+      setApiError({ status: 0, message: 'Tidak dapat terhubung ke server.' });
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -168,6 +227,35 @@ export default function FaqManagementAdmin() {
           <Plus className="w-4 h-4" /> Tambah FAQ
         </button>
       </div>
+
+      {/* Banner error untuk daftar FAQ (load / publish / unpublish) */}
+      {listError && (
+        <div
+          role="alert"
+          className="flex items-start justify-between gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-red-700"
+        >
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 mt-0.5 shrink-0" />
+            <div>
+              <p className="text-sm font-semibold">
+                Terjadi Kesalahan {listError.status > 0 && `(Status ${listError.status})`}
+              </p>
+              <p className="text-xs">{listError.message}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={fetchFaqs}
+              className="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-semibold"
+            >
+              Coba Lagi
+            </button>
+            <button onClick={() => setListError(null)} aria-label="Tutup">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
@@ -188,19 +276,34 @@ export default function FaqManagementAdmin() {
         <div className="p-5 border-b border-gray-100 font-bold text-gray-800">
           Daftar FAQ ({faqs.length})
         </div>
+
+        {faqs.length === 0 && (
+          <div className="p-10 text-center text-sm text-gray-500">
+            {isLoading
+              ? 'Memuat data FAQ...'
+              : listError
+              ? 'Data FAQ tidak dapat dimuat.'
+              : 'Belum ada FAQ. Klik "Tambah FAQ" untuk membuat yang pertama.'}
+          </div>
+        )}
+
         <div className="divide-y divide-gray-100">
           {faqs.map((faq) => (
             <div key={faq.id} className="p-5 hover:bg-gray-50/50 transition">
               <div className="flex justify-between items-start gap-4">
-                {/* PERBAIKAN 1: Klik area teks hanya membuka jawaban, tidak mengubah API status */}
-                <div className="flex-1 cursor-pointer" onClick={() => setOpenFaqId(openFaqId === faq.id ? null : faq.id)}>
+                <div
+                  className="flex-1 cursor-pointer"
+                  onClick={() => setOpenFaqId(openFaqId === faq.id ? null : faq.id)}
+                >
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-xs px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium">
                       {faq.category}
                     </span>
                     <span
                       className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                        faq.status === 'published' ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-500'
+                        faq.status === 'published'
+                          ? 'bg-emerald-50 text-emerald-600'
+                          : 'bg-gray-100 text-gray-500'
                       }`}
                     >
                       {faq.status}
@@ -220,7 +323,8 @@ export default function FaqManagementAdmin() {
                     onClick={() => toggleFaq(faq.id)}
                     className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${
                       faq.status === 'published'
-                        ? 'bg-amber-50 text-amber-600 hover:bg-amber-100' : 'bg-emerald-600 text-white hover:bg-emerald-700'
+                        ? 'bg-amber-50 text-amber-600 hover:bg-amber-100'
+                        : 'bg-emerald-600 text-white hover:bg-emerald-700'
                     }`}
                   >
                     {faq.status === 'published' ? 'Unpublish' : 'Publish'}
@@ -233,8 +337,11 @@ export default function FaqManagementAdmin() {
                   </button>
                 </div>
               </div>
-              <div className={`grid transition-all duration-300 ease-in-out ${
-                  openFaqId === faq.id ? 'grid-rows-[1fr] opacity-100 mt-3 pt-3 border-t border-gray-100' : 'grid-rows-[0fr] opacity-0'
+              <div
+                className={`grid transition-all duration-300 ease-in-out ${
+                  openFaqId === faq.id
+                    ? 'grid-rows-[1fr] opacity-100 mt-3 pt-3 border-t border-gray-100'
+                    : 'grid-rows-[0fr] opacity-0'
                 } overflow-hidden`}
               >
                 <div className="overflow-hidden text-sm text-gray-600 leading-relaxed">
@@ -246,20 +353,37 @@ export default function FaqManagementAdmin() {
         </div>
       </div>
 
+      {/* MODAL TAMBAH FAQ */}
       {isAdding && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4">
             <div className="flex justify-between items-center border-b pb-3">
               <h3 className="font-bold text-lg text-gray-900">Tambah FAQ Baru</h3>
-              <button onClick={() => setIsAdding(false)} className="text-gray-400 hover:text-gray-600">
+              <button onClick={closeModal} className="text-gray-400 hover:text-gray-600">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <form onSubmit={handleSaveFaq} className="space-y-4">
+              {apiError && (
+                <div
+                  role="alert"
+                  className="flex items-start justify-between rounded-xl border border-red-200 bg-red-50 p-3 text-red-700"
+                >
+                  <div>
+                    <p className="text-sm font-semibold">
+                      Gagal Menyimpan FAQ {apiError.status > 0 && `(Status ${apiError.status})`}
+                    </p>
+                    <p className="text-xs">{apiError.message}</p>
+                  </div>
+                  <button type="button" onClick={() => setApiError(null)} aria-label="Tutup">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+
               <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-1">Kategori</label>
-                {/* PERBAIKAN 2: Tambah text-gray-900 dan bg-white agar teks hitam pekat */}
                 <select
                   value={newCategory}
                   onChange={(e) => setNewCategory(e.target.value)}
@@ -275,34 +399,39 @@ export default function FaqManagementAdmin() {
 
               <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-1">Pertanyaan</label>
-                {/* PERBAIKAN 3: Tambah text-gray-900 dan placeholder-gray-400 */}
                 <input
                   type="text"
                   value={newQuestion}
                   onChange={(e) => setNewQuestion(e.target.value)}
                   placeholder="Masukkan pertanyaan FAQ..."
-                  className="w-full border rounded-xl p-2.5 text-sm focus:outline-none focus:border-emerald-600 text-gray-900 bg-white placeholder-gray-400"
+                  className={`w-full border rounded-xl p-2.5 text-sm focus:outline-none text-gray-900 bg-white placeholder-gray-400 ${
+                    fieldErrors.question
+                      ? 'border-red-500 focus:border-red-500'
+                      : 'focus:border-emerald-600'
+                  }`}
                 />
+                {fieldErrors.question && (
+                  <p className="mt-1 text-xs text-red-600">{fieldErrors.question}</p>
+                )}
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-1">Jawaban</label>
-                {/* PERBAIKAN 4: Tambah text-gray-900 dan placeholder-gray-400 */}
                 <textarea
                   rows={3}
                   value={newAnswer}
                   onChange={(e) => setNewAnswer(e.target.value)}
                   placeholder="Masukkan penjelasan/jawaban..."
-                  className="w-full border rounded-xl p-2.5 text-sm focus:outline-none focus:border-emerald-600 text-gray-900 bg-white placeholder-gray-400"
+                  className={`w-full border rounded-xl p-2.5 text-sm focus:outline-none text-gray-900 bg-white placeholder-gray-400 ${
+                    fieldErrors.answer
+                      ? 'border-red-500 focus:border-red-500'
+                      : 'focus:border-emerald-600'
+                  }`}
                 />
+                {fieldErrors.answer && (
+                  <p className="mt-1 text-xs text-red-600">{fieldErrors.answer}</p>
+                )}
               </div>
-
-              {/* TAMPILKAN PESAN ERROR DI SINI */}
-              {errorMsg && (
-                <p className="text-sm font-semibold text-red-500 mt-1">
-                  * {errorMsg}
-                </p>
-              )}
 
               <div className="flex items-center gap-2">
                 <input
@@ -320,16 +449,17 @@ export default function FaqManagementAdmin() {
               <div className="flex justify-end gap-3 pt-2">
                 <button
                   type="button"
-                  onClick={() => setIsAdding(false)}
+                  onClick={closeModal}
                   className="px-4 py-2 border rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-50"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-semibold"
+                  disabled={isSaving}
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed text-white rounded-xl text-sm font-semibold"
                 >
-                  Simpan FAQ
+                  {isSaving ? 'Menyimpan...' : 'Simpan FAQ'}
                 </button>
               </div>
             </form>
@@ -337,6 +467,7 @@ export default function FaqManagementAdmin() {
         </div>
       )}
 
+      {/* MODAL HAPUS FAQ */}
       {deleteFaqTarget && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-xl space-y-4 text-center">
@@ -344,21 +475,36 @@ export default function FaqManagementAdmin() {
               <Trash2 className="w-6 h-6" />
             </div>
             <div>
-              <h3 className="font-bold text-gray-900">Hapus FAQ ini?</h3>
-              <p className="text-xs text-gray-500 mt-1">"{deleteFaqTarget.question}" akan dihapus secara permanen.</p>
+              <h3 className="font-bold text-gray-900">
+                {deleteError ? 'Gagal Menghapus FAQ' : 'Hapus FAQ ini?'}
+              </h3>
+              <p className="text-xs text-gray-500 mt-1">
+                "{deleteFaqTarget.question}" akan dihapus secara permanen.
+              </p>
             </div>
+
+            {deleteError && (
+              <div
+                role="alert"
+                className="rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-700"
+              >
+                {deleteError}
+              </div>
+            )}
+
             <div className="flex gap-3 pt-2">
               <button
-                onClick={() => setDeleteFaqTarget(null)}
+                onClick={closeDeleteModal}
                 className="flex-1 py-2 border rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-50"
               >
                 Batal
               </button>
               <button
                 onClick={handleConfirmDelete}
-                className="flex-1 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl text-sm font-semibold"
+                disabled={isDeleting}
+                className="flex-1 py-2 bg-red-500 hover:bg-red-600 disabled:opacity-60 disabled:cursor-not-allowed text-white rounded-xl text-sm font-semibold"
               >
-                Hapus
+                {isDeleting ? 'Menghapus...' : deleteError ? 'Coba Lagi' : 'Hapus'}
               </button>
             </div>
           </div>
