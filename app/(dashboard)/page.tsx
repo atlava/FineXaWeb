@@ -79,72 +79,70 @@ export default function DashboardAdmin() {
     fetchDashboardData();
   }, [router]);
 
-  return (
+return (
     <div className="space-y-6">
-      {/* Bagian sticky: Judul + 3 Kartu Metrik */}
-      <div className="lg:sticky lg:top-0 lg:z-20 space-y-6 bg-gray-50 pb-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-950 tracking-tight">Dashboard</h1>
-          <p className="text-sm text-gray-500 mt-1">Overview sistem dan aktivitas pengguna FineXa</p>
+      {/* Bagian sticky: Hanya Judul & Subjudul */}
+      <div className="lg:top-0 lg:z-20 bg-gray-50 pb-4 pt-1">
+        <h1 className="text-3xl font-bold text-gray-950 tracking-tight">Dashboard</h1>
+        <p className="text-sm text-gray-500 mt-1">Overview sistem dan aktivitas pengguna FineXa</p>
+      </div>
+
+      {/* Grid 3 Kartu Metrik Utama (Sekarang ikut ter-scroll ke atas) */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        {/* Card 1: Total Users (Dinamis) */}
+        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+              <Users className="w-5 h-5" />
+            </div>
+            <div className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${
+              metrics.userGrowth >= 0 ? 'text-emerald-600 bg-emerald-50' : 'text-red-600 bg-red-50'
+            }`}>
+              <TrendingUp className="w-3.5 h-3.5" />
+              <span>{metrics.userGrowth >= 0 ? `+${metrics.userGrowth}%` : `${metrics.userGrowth}%`}</span>
+            </div>
+          </div>
+          <div className="mt-4">
+            <span className="text-xs text-gray-400 font-medium">Total Users</span>
+            <h3 className="text-2xl font-extrabold text-gray-900 mt-0.5">{metrics.totalUsers}</h3>
+          </div>
         </div>
 
-        {/* Grid 3 Kartu Metrik Utama */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {/* Card 1: Total Users (Dinamis) */}
-          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-between">
-            <div className="flex items-center justify-between">
-              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                <Users className="w-5 h-5" />
-              </div>
-              <div className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${
-                metrics.userGrowth >= 0 ? 'text-emerald-600 bg-emerald-50' : 'text-red-600 bg-red-50'
-              }`}>
-                <TrendingUp className="w-3.5 h-3.5" />
-                <span>{metrics.userGrowth >= 0 ? `+${metrics.userGrowth}%` : `${metrics.userGrowth}%`}</span>
-              </div>
+        {/* Card 2: Active Sessions / Month (Dinamis) */}
+        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+              <Activity className="w-5 h-5" />
             </div>
-            <div className="mt-4">
-              <span className="text-xs text-gray-400 font-medium">Total Users</span>
-              <h3 className="text-2xl font-extrabold text-gray-900 mt-0.5">{metrics.totalUsers}</h3>
+            <div className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${
+              metrics.activeGrowth >= 0 ? 'text-emerald-600 bg-emerald-50' : 'text-red-600 bg-red-50'
+            }`}>
+              <TrendingUp className="w-3.5 h-3.5" />
+              <span>{metrics.activeGrowth >= 0 ? `+${metrics.activeGrowth}%` : `${metrics.activeGrowth}%`}</span>
             </div>
           </div>
+          <div className="mt-4">
+            <span className="text-xs text-gray-400 font-medium">Active Sessions / Month</span>
+            <h3 className="text-2xl font-extrabold text-gray-900 mt-0.5">{metrics.activeSessions}</h3>
+          </div>
+        </div>
 
-          {/* Card 2: Active Sessions / Month (Dinamis) */}
-          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-between">
-            <div className="flex items-center justify-between">
-              <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
-                <Activity className="w-5 h-5" />
-              </div>
-              <div className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${
-                metrics.activeGrowth >= 0 ? 'text-emerald-600 bg-emerald-50' : 'text-red-600 bg-red-50'
-              }`}>
-                <TrendingUp className="w-3.5 h-3.5" />
-                <span>{metrics.activeGrowth >= 0 ? `+${metrics.activeGrowth}%` : `${metrics.activeGrowth}%`}</span>
-              </div>
+        {/* Card 3: Content Items (Dinamis) */}
+        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+              <FileText className="w-5 h-5" />
             </div>
-            <div className="mt-4">
-              <span className="text-xs text-gray-400 font-medium">Active Sessions / Month</span>
-              <h3 className="text-2xl font-extrabold text-gray-900 mt-0.5">{metrics.activeSessions}</h3>
+            <div className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${
+              metrics.faqGrowth >= 0 ? 'text-emerald-600 bg-emerald-50' : 'text-red-600 bg-red-50'
+            }`}>
+              <TrendingUp className="w-3.5 h-3.5" />
+              <span>{metrics.faqGrowth >= 0 ? `+${metrics.faqGrowth}%` : `${metrics.faqGrowth}%`}</span>
             </div>
           </div>
-
-          {/* Card 3: Content Items (Dinamis) */}
-          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-between">
-            <div className="flex items-center justify-between">
-              <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
-                <FileText className="w-5 h-5" />
-              </div>
-              <div className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${
-                metrics.faqGrowth >= 0 ? 'text-emerald-600 bg-emerald-50' : 'text-red-600 bg-red-50'
-              }`}>
-                <TrendingUp className="w-3.5 h-3.5" />
-                <span>{metrics.faqGrowth >= 0 ? `+${metrics.faqGrowth}%` : `${metrics.faqGrowth}%`}</span>
-              </div>
-            </div>
-            <div className="mt-4">
-              <span className="text-xs text-gray-400 font-medium">Content Items</span>
-              <h3 className="text-2xl font-extrabold text-gray-900 mt-0.5">{metrics.totalFaqs}</h3>
-            </div>
+          <div className="mt-4">
+            <span className="text-xs text-gray-400 font-medium">Content Items</span>
+            <h3 className="text-2xl font-extrabold text-gray-900 mt-0.5">{metrics.totalFaqs}</h3>
           </div>
         </div>
       </div>
