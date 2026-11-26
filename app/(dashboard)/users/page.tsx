@@ -29,6 +29,10 @@ export default function UserManagementAdmin() {
   const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
   const [deleteUserTarget, setDeleteUserTarget] = useState<UserData | null>(null);
 
+  // ===== PAGINATION STATE =====
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
   // ===== ERROR STATES =====
   const [listError, setListError] = useState<ApiErrorState | null>(null); // gagal load daftar user
   const [deleteError, setDeleteError] = useState<string | null>(null); // gagal hapus user
@@ -41,6 +45,16 @@ export default function UserManagementAdmin() {
       user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Perhitungan pagination dari hasil pencarian
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedUsers = filteredUsers.slice(startIndex, startIndex + itemsPerPage);
+
+  // Reset ke halaman 1 setiap kali kata kunci pencarian berubah
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
 
   // Fungsi pembaca data (Read) dari Express
   const fetchUsers = async () => {
@@ -90,6 +104,7 @@ export default function UserManagementAdmin() {
         });
 
         setUsers(formattedData);
+        setCurrentPage(1);
       } else {
         setListError({
           status: res.status,
@@ -124,8 +139,15 @@ export default function UserManagementAdmin() {
 
       if (res.ok) {
         // Hapus user dari layar tanpa perlu refresh halaman
-        setUsers((prev) => prev.filter((u) => u.id !== deleteUserTarget.id));
+        const updatedUsers = users.filter((u) => u.id !== deleteUserTarget.id);
+        setUsers(updatedUsers);
         setDeleteUserTarget(null);
+
+        // Jika item terakhir di halaman saat ini dihapus, mundur ke halaman sebelumnya
+        const newTotalPages = Math.max(1, Math.ceil(updatedUsers.length / itemsPerPage));
+        if (currentPage > newTotalPages) {
+          setCurrentPage(newTotalPages);
+        }
         return;
       }
 
@@ -215,8 +237,8 @@ export default function UserManagementAdmin() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 text-gray-700">
-              {filteredUsers.length > 0 ? (
-                filteredUsers.map((user) => (
+              {paginatedUsers.length > 0 ? (
+                paginatedUsers.map((user) => (
                   <tr key={user.id} className="hover:bg-gray-50/50 transition">
                     <td className="px-4 md:px-6 py-3 md:py-4.5 flex items-center gap-2 md:gap-3 whitespace-nowrap">
                       <div className="w-7 h-7 md:w-9 md:h-9 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold flex-shrink-0">
@@ -270,6 +292,51 @@ export default function UserManagementAdmin() {
             </tbody>
           </table>
         </div>
+
+        {/* Bar Navigasi Pagination */}
+        {totalPages > 1 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-gray-100 px-4 md:px-6 py-4">
+            <p className="text-xs text-gray-500">
+              Menampilkan <span className="font-semibold text-gray-700">{startIndex + 1}</span>–
+              <span className="font-semibold text-gray-700">
+                {Math.min(startIndex + itemsPerPage, filteredUsers.length)}
+              </span>{' '}
+              dari <span className="font-semibold text-gray-700">{filteredUsers.length}</span> pengguna
+            </p>
+
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40 transition-colors"
+              >
+                Sebelumnya
+              </button>
+
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+                    currentPage === page
+                      ? 'bg-[#0F3D32] text-white'
+                      : 'border border-gray-200 text-gray-600 hover:bg-gray-50'
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+
+              <button
+                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40 transition-colors"
+              >
+                Selanjutnya
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Modal Detail User */}

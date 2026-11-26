@@ -31,6 +31,10 @@ export default function DashboardAdmin() {
   const [recentUsers, setRecentUsers] = useState<any[]>([]);
   const [lineData, setLineData] = useState<any[]>([]);
 
+  // State untuk Pagination Pengguna Terbaru
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
   const fetchDashboardData = async () => {
     try {
       const token = localStorage.getItem('token');
@@ -60,6 +64,7 @@ export default function DashboardAdmin() {
         });
         
         setRecentUsers(formattedRecentUsers);
+        setCurrentPage(1);
       }
     } catch (error) {
       console.error("Gagal mengambil data dashboard:", error);
@@ -79,7 +84,12 @@ export default function DashboardAdmin() {
     fetchDashboardData();
   }, [router]);
 
-return (
+  // Perhitungan slice data untuk pagination
+  const totalPages = Math.ceil(recentUsers.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedUsers = recentUsers.slice(startIndex, startIndex + itemsPerPage);
+
+  return (
     <div className="space-y-6">
       {/* Bagian sticky: Hanya Judul & Subjudul */}
       <div className="lg:top-0 lg:z-20 bg-gray-50 pb-4 pt-1">
@@ -212,7 +222,7 @@ return (
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 text-xs font-medium text-gray-700">
-              {recentUsers.map((user) => (
+              {paginatedUsers.map((user) => (
                 <tr key={user.id} className="hover:bg-gray-50/40 transition-colors">
                   <td className="py-4 px-6 flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold flex-shrink-0">
@@ -242,6 +252,51 @@ return (
             </tbody>
           </table>
         </div>
+
+        {/* Bar Navigasi Pagination */}
+        {totalPages > 1 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-gray-100 px-6 py-4">
+            <p className="text-xs text-gray-500">
+              Menampilkan <span className="font-semibold text-gray-700">{startIndex + 1}</span>–
+              <span className="font-semibold text-gray-700">
+                {Math.min(startIndex + itemsPerPage, recentUsers.length)}
+              </span>{' '}
+              dari <span className="font-semibold text-gray-700">{recentUsers.length}</span> pengguna
+            </p>
+
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40 transition-colors"
+              >
+                Sebelumnya
+              </button>
+
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+                    currentPage === page
+                      ? 'bg-[#0F3D32] text-white'
+                      : 'border border-gray-200 text-gray-600 hover:bg-gray-50'
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+
+              <button
+                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40 transition-colors"
+              >
+                Selanjutnya
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
