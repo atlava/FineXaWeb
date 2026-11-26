@@ -1,10 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Image from "next/image";
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Eye, EyeOff } from 'lucide-react';
 
 const CREDENTIAL_ERROR = 'Format email tidak valid atau akun tidak terdaftar';
 
@@ -12,6 +11,7 @@ export default function LoginAdmin() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   // ===== ERROR STATES =====
@@ -180,27 +180,37 @@ export default function LoginAdmin() {
 
             <div className="flex flex-col">
               <label className="text-sm font-medium text-gray-700 mb-1">Password</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                  setFieldErrors((prev) => ({ ...prev, password: undefined }));
-                }}
-                placeholder="Masukkan password"
-                aria-invalid={!!fieldErrors.password}
-                className={`border rounded-lg p-3 focus:outline-none focus:ring-2 transition-all text-sm text-gray-900 bg-white placeholder-gray-400 ${
-                  fieldErrors.password
-                    ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20'
-                    : 'border-gray-300 focus:border-emerald-600 focus:ring-emerald-600/20'
-                }`}
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setFieldErrors((prev) => ({ ...prev, password: undefined }));
+                  }}
+                  placeholder="Masukkan password"
+                  aria-invalid={!!fieldErrors.password}
+                  className={`w-full border rounded-lg p-3 pr-10 focus:outline-none focus:ring-2 transition-all text-sm text-gray-900 bg-white placeholder-gray-400 ${
+                    fieldErrors.password
+                      ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20'
+                      : 'border-gray-300 focus:border-emerald-600 focus:ring-emerald-600/20'
+                  }`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  aria-label={showPassword ? 'Sembunyikan password' : 'Lihat password'}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors focus:outline-none"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
               {fieldErrors.password && (
                 <p className="mt-1 text-xs text-red-600">{fieldErrors.password}</p>
               )}
             </div>
 
-            <div className="flex items-center justify-between text-sm mt-1">
+            <div className="flex items-center text-sm mt-1">
               <label className="flex items-center gap-2 text-gray-600 cursor-pointer">
                 <input
                   type="checkbox"
@@ -208,9 +218,6 @@ export default function LoginAdmin() {
                 />
                 Ingat Saya
               </label>
-              <Link href="#" className="font-medium text-emerald-600 hover:underline">
-                Lupa password?
-              </Link>
             </div>
 
             <button
